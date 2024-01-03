@@ -28,8 +28,7 @@ jobs: # list of things to do
         working-directory: functions/sample/nodejs
 
       - name: Lint code
-        run: |
-          flake8 --exclude=migrations
+        run: npm run lint
     
 
   lint_function_python:
