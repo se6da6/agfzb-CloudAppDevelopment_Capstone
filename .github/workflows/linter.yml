@@ -51,7 +51,7 @@ jobs:
       - name: Code Linting
         run: |
           cd functions/sample/python
-          pylint *.py
+          pylint your_app_directory/*.py  # Adjust the path to your Django app
 
   lint_django_server:
     name: Linting Django Server 
@@ -75,4 +75,4 @@ jobs:
       - name: Code Linting
         run: |
           cd server
-          pylint *.py
+          pylint your_django_project/*.py  # Adjust the path to your Django project
