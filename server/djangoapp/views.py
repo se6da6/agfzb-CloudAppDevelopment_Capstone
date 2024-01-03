@@ -3,6 +3,9 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 # from .models import related models
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.decorators import login_required
+
 # from .restapis import related methods
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
@@ -21,6 +24,51 @@ def about_us(request):
     return render(request, 'djangoapp/about.html')
 def contact_us(request):
     return render(request, 'djangoapp/contact.html')
+def login_request(request):
+    context = {}
+    if request.method == "POST":
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            messages.success(request, f"Welcome, {user.first_name}!")
+            return redirect('djangoapp:index')
+        else:
+            messages.error(request, "Invalid username or password.")
+    
+    return render(request, 'djangoapp/login.html', context)
+@login_required
+def logout_request(request):
+    logout(request)
+    messages.success(request, "You have been logged out successfully.")
+    return redirect('djangoapp:index')
+def registration_request(request):
+    context = {}
+    
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get('username')
+            messages.success(request, f"Account created for {username}!")
+            return redirect('djangoapp:login')
+    else:
+        form = UserCreationForm()
+    
+    context['form'] = form
+    return render(request, 'djangoapp/registration.html', context)
+def signup(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('djangoapp:index')
+    else:
+        form = UserCreationForm()
+    return render(request, 'djangoapp/registration.html', {'form': form})
 # Create an `about` view to render a static about page
 # def about(request):
 # ...
