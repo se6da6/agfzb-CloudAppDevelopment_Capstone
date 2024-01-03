@@ -33,46 +33,34 @@ jobs:
     name: Linting Python Function 
     runs-on: ubuntu-latest 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Setup Python
-        uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v4
         with:
           python-version: 3.7
-
-      - name: Install Python Dependencies
+      - name: Install dependencies
         run: |
-          cd functions/sample/python
           python -m pip install --upgrade pip
           pip install pylint
-          if [ -f requirements.txt ]; then pip install -r requirements.txt
-
-      - name: Code Linting
-        run: |
-          cd functions/sample/python
-          pylint your_app_directory/*.py  # Adjust the path to your Django app
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Lint with Pylint
+        run: pylint *.py
+        working-directory: functions/sample/python
 
   lint_django_server:
     name: Linting Django Server 
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Setup Python
-        uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v4
         with:
           python-version: 3.7
-
-      - name: Install Python Dependencies
+      - name: Install dependencies
         run: |
-          cd server
           python -m pip install --upgrade pip
           pip install pylint
-          if [ -f requirements.txt ]; then pip install -r requirements.txt
-
-      - name: Code Linting
-        run: |
-          cd server
-          pylint your_django_project/*.py  # Adjust the path to your Django project
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Lint with Pylint
+        run: pylint *.py
+        working-directory: server
