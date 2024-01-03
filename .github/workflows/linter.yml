@@ -6,63 +6,73 @@ on:
   pull_request:
     branches: [master, main]
 
-jobs: # list of things to do
+jobs:
   lint_function_js:
     name: Linting JavaScript Function 
     runs-on: ubuntu-latest 
-    steps: # list of steps
-      - name: Install NodeJS
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 16
 
-      - name: Code Checkout
-        uses: actions/checkout@v3
-
       - name: Install Dependencies
-        run: npm install
-        working-directory: functions/sample/nodejs
+        run: |
+          cd functions/sample/nodejs
+          npm install
 
       - name: Code Linting
-        run: npm run lint
-        working-directory: functions/sample/nodejs
-
-      - name: Lint code
-        run: npm run lint
-    
+        run: |
+          cd functions/sample/nodejs
+          npm run lint
 
   lint_function_python:
     name: Linting Python Function 
     runs-on: ubuntu-latest 
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
         with:
           python-version: 3.7
-      - name: Install dependencies
+
+      - name: Install Python Dependencies
         run: |
+          cd functions/sample/python
           python -m pip install --upgrade pip
           pip install pylint
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      - name: Lint with Pylint
-        run: pylint *.py
-        working-directory: functions/sample/python
+          if [ -f requirements.txt ]; then pip install -r requirements.txt
+
+      - name: Code Linting
+        run: |
+          cd functions/sample/python
+          pylint *.py
 
   lint_django_server:
     name: Linting Django Server 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
         with:
           python-version: 3.7
-      - name: Install dependencies
+
+      - name: Install Python Dependencies
         run: |
+          cd server
           python -m pip install --upgrade pip
           pip install pylint
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      - name: Lint with Pylint
-        run: pylint *.py
-        working-directory: server
+          if [ -f requirements.txt ]; then pip install -r requirements.txt
+
+      - name: Code Linting
+        run: |
+          cd server
+          pylint *.py
