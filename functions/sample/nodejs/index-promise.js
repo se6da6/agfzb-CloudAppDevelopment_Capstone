@@ -19,14 +19,13 @@ function main(params) {
 
 function getDbs(cloudant) {
      return new Promise((resolve, reject) => {
-         cloudant.getAllDbs()
-             .then(body => {
-                 resolve({ dbs: body.result });
-             })
-             .catch(err => {
-                  console.log(err);
-                 reject({ err: err });
-             });
+        cloudant.db.list()
+        .then(body => {
+            resolve({ dbs: body });
+        })
+        .catch(err => {
+            reject({ err: err });
+        });
      });
  }
  
