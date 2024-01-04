@@ -21,6 +21,12 @@
             <li><a href="{% url 'djangoapp:index' %}">Home</a></li>
             <li><a href="{% url 'djangoapp:about_us' %}">About Us</a></li>
             <li><a href="{% url 'djangoapp:contact_us' %}">Contact Us</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="{% url 'djangoapp:logout' %}">Logout</a></li>
+        {% else %}
+            <li><a href="{% url 'djangoapp:login' %}">Login</a></li>
+        {% endif %}
+        <li><a href="{% url 'djangoapp:registration' %}">Sign Up</a></li>
             <!-- Add other navigation links as needed -->
         </ul>
     </nav>
