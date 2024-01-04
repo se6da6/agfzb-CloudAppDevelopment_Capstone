@@ -103,4 +103,17 @@ def get_dealerships(request):
 # Create a `add_review` view to submit a review
 # def add_review(request, dealer_id):
 # ...
+def car_operations(request):
+    # Retrieve the list of cars from the database
+    cars = YourCarModel.objects.all()  # Replace YourCarModel with your actual CarModel class
+    return render(request, 'djangoapp/car_operations.html', {'cars': cars})
 
+def add_car(request):
+    # Handle adding a new car (form submission) logic here
+    # For example, create a new car instance and save it to the database
+    return redirect('djangoapp:car_operations')  # Redirect back to the car operations page
+
+@user_passes_test(lambda user: user.is_staff, login_url='djangoapp:login')
+def car_design(request):
+    # Your view logic for the car design page goes here
+    return render(request, 'djangoapp/car_design.html')
