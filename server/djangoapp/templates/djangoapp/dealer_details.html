@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Dealership Review</title>
@@ -7,12 +8,47 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 </head>
 
-    <body>
+<body>
 
-    <!--Add a nav bar here -->
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="{% url 'djangoapp:index' %}">Home</a>
+        <!-- Add other navigation links as needed -->
+    </nav>
 
-    <!-- Add reviews as cards -->
+    <!-- Dealer Details Section -->
+    <div class="container mt-5">
+        <h2>Dealer Details</h2>
+        <p><strong>Name:</strong> {{ dealer.full_name }}</p>
+        <p><strong>Address:</strong> {{ dealer.address }}, {{ dealer.city }}</p>
+        <p><strong>ID:</strong> {{ dealer.id }}</p>
+        <p><strong>Latitude:</strong> {{ dealer.lat }}</p>
+        <!-- Add other details as needed -->
 
-    </body>
+        <!-- Reviews Section -->
+        <h2 class="mt-4">Reviews</h2>
+        {% if reviews %}
+            <div class="card-deck mt-3">
+                {% for review in reviews %}
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ review.name }}</h5>
+                            <p class="card-text"><strong>Purchase:</strong> {{ review.purchase }}</p>
+                            <p class="card-text"><strong>Review:</strong> {{ review.review }}</p>
+                            <p class="card-text"><strong>Purchase Date:</strong> {{ review.purchase_date }}</p>
+                            <p class="card-text"><strong>Car Make:</strong> {{ review.car_make }}</p>
+                            <p class="card-text"><strong>Car Model:</strong> {{ review.car_model }}</p>
+                            <p class="card-text"><strong>Car Year:</strong> {{ review.car_year }}</p>
+                            <p class="card-text"><strong>Sentiment:</strong> {{ review.sentiment }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No reviews available.</p>
+        {% endif %}
+    </div>
+
+</body>
 
 </html>
