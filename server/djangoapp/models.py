@@ -45,6 +45,18 @@ class CarModel(models.Model):
         return f"{self.car_make} - {self.name}"
 
 # <HINT> Create a plain Python class `CarDealer` to hold dealer data
+class CarDealer(models.Model):
+    address = models.CharField(max_length=255)
+    city = models.CharField(max_length=255)
+    full_name = models.CharField(max_length=255)
+    id = models.IntegerField(primary_key=True)  # Assuming 'id' is the primary key
+    lat = models.FloatField()
+    long = models.FloatField()
+    short_name = models.CharField(max_length=255)
+    st = models.CharField(max_length=255)
+    zip = models.CharField(max_length=20)
 
+    def __str__(self):
+        return "Dealer name: " + self.full_name
 
 # <HINT> Create a plain Python class `DealerReview` to hold review data
