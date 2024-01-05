@@ -98,10 +98,10 @@ def get_dealerships(request):
     if request.method == "GET":
         url = "your-cloud-function-domain/dealerships/dealer-get"
         # Get dealers from the URL
-        dealerships = get_dealers_from_cf(url)
-        # Concat all dealer's short name
-        dealer_names = ' '.join([dealer.short_name for dealer in dealerships])
-        # Return a list of dealer short name
+        dealerships = get_dealers_from_cf(request, url)
+        # Concat all dealer's full names
+        dealer_names = ' '.join([dealer.full_name for dealer in dealerships])
+        # Return a list of dealer full names
         return HttpResponse(dealer_names)
 
 
@@ -129,7 +129,7 @@ def car_design(request):
 
 # Define the get_dealers_from_cf function
 # Define the get_dealers_from_cf function
-def get_dealers_from_cf(request):
+def get_dealers_from_cf(request, url):
     # Replace 'YOUR_DEALER_GET_SERVICE_URL' with the actual URL of your dealer-get service
     dealer_get_url = 'https://sedadak06-3000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/dealerships/get'
 
@@ -145,17 +145,15 @@ def get_dealers_from_cf(request):
         dealers = []
 
         for dealer_info in dealers_data:
-            # Assuming 'short_name' is one of the keys in the dealer_info dictionary
-            short_name = dealer_info.get('short_name', '')
+            # Assuming 'full_name' is one of the keys in the dealer_info dictionary
+            full_name = dealer_info.get('full_name', '')
 
             # Assuming other relevant keys are present in the dealer_info dictionary
             # Modify the following lines based on the actual keys in your data
             address = dealer_info.get('address', '')
             city = dealer_info.get('city', '')
-            full_name = dealer_info.get('full_name', '')
             dealer_id = dealer_info.get('id', '')
             lat = dealer_info.get('lat', '')
-            
 
             # Create a CarDealer object
             dealer = CarDealer(
@@ -164,16 +162,10 @@ def get_dealers_from_cf(request):
                 full_name=full_name,
                 id=dealer_id,
                 lat=lat,
-                
             )
 
             # Add the dealer object to the list
             dealers.append(dealer)
-
-        # Assuming you're using a list comprehension to create CarDealer objects
-        # dealers = [CarDealer(**dealer) for dealer in dealers_data]
-
-        # Your other code...
 
         # Return a JsonResponse with the processed data
         return JsonResponse({'dealers': dealers})
@@ -181,3 +173,18 @@ def get_dealers_from_cf(request):
         # Handle the error (e.g., log it or raise an exception)
         print(f"Error fetching dealers: {response.status_code}")
         return JsonResponse({'error': 'Error fetching dealers'}, status=500)
+
+# Create a `get_dealer_details` view to render the reviews of a dealer
+def get_dealer_details(request, dealer_id):
+    if request.method == "GET":
+        # Replace 'your-cloud-function-domain/dealerships/reviews-get' with the actual URL
+        url = 'https://sedadak06-5000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/api/get_reviews?id=15'
+        
+        # Get reviews from the URL using the dealer_id
+        reviews = get_dealer_reviews_from_cf(url, dealer_id)
+
+        # Concatenate all review details
+        review_details = ' '.join([f"Review by {review.name}: {review.review}" for review in reviews])
+
+        # Return a list of review details
+        return HttpResponse(review_details)

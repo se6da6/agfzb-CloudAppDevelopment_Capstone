@@ -51,12 +51,39 @@ class CarDealer(models.Model):
     full_name = models.CharField(max_length=255)
     id = models.IntegerField(primary_key=True)  # Assuming 'id' is the primary key
     lat = models.FloatField()
-    long = models.FloatField()
-    short_name = models.CharField(max_length=255)
-    st = models.CharField(max_length=255)
-    zip = models.CharField(max_length=20)
+    
+    
 
     def __str__(self):
         return "Dealer name: " + self.full_name
 
 # <HINT> Create a plain Python class `DealerReview` to hold review data
+from django.db import models
+
+class DealerReview(models.Model):
+    DEALERSHIP_CHOICES = [
+        ('Dealer A', 'Dealer A'),
+        ('Dealer B', 'Dealer B'),
+        ('Dealer C', 'Dealer C'),
+        # Add more choices as needed
+    ]
+    dealership = models.CharField(max_length=50, choices=DEALERSHIP_CHOICES)
+    name = models.CharField(max_length=255)
+    purchase = models.BooleanField()
+    review = models.TextField()
+    purchase_date = models.DateField()
+    car_make = models.CharField(max_length=50)  # You can replace this with a ForeignKey if you have a CarMake model
+    car_model = models.CharField(max_length=50)  # You can replace this with a ForeignKey if you have a CarModel model
+    car_year = models.IntegerField()
+    
+    SENTIMENT_CHOICES = [
+        ('Positive', 'Positive'),
+        ('Neutral', 'Neutral'),
+        ('Negative', 'Negative'),
+    ]
+    sentiment = models.CharField(max_length=10, choices=SENTIMENT_CHOICES)
+    
+    id = models.AutoField(primary_key=True)
+
+    def __str__(self):
+        return f"Review for {self.dealership} - {self.name}"
