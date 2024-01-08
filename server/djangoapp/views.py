@@ -2,8 +2,6 @@ from django.shortcuts import render
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
-
-from server.djangoapp.restapis import get_dealer_reviews_from_cf
 # from .models import related models
 from .models import CarMake, CarModel, CarDealer
 from django.contrib.auth.forms import UserCreationForm
@@ -17,6 +15,8 @@ import logging
 import json
 import requests
 from django.http import JsonResponse
+from .restapis import get_dealer_reviews_from_cf, get_request
+
 
 
 # Get an instance of a logger
@@ -96,15 +96,29 @@ def signup(request):
 # ...
 
 # Update the `get_dealerships` view to render the index page with a list of dealerships
+# Update the get_dealerships view
+# Update the get_dealerships view for debugging
 def get_dealerships(request):
     if request.method == "GET":
-        url = "your-cloud-function-domain/dealerships/dealer-get"
+        url = "https://sedadak06-3000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/dealerships/get"
         # Get dealers from the URL
-        dealerships = get_dealers_from_cf(request, url)
-        # Concat all dealer's full names
-        dealer_names = ' '.join([dealer.full_name for dealer in dealerships])
-        # Return a list of dealer full names
-        return HttpResponse(dealer_names)
+        dealerships = get_dealers_from_cf(url)
+
+        # Debugging: Print the content of the dealerships variable
+        print(f"Dealerships: {dealerships}")
+
+        # Check if dealerships is a list of CarDealer objects
+        if isinstance(dealerships, list) and dealerships and isinstance(dealerships[0], CarDealer):
+            # Concat all dealer's full names
+            dealer_names = ' '.join([dealer.full_name for dealer in dealerships])
+            # Return a list of dealer full names
+            return HttpResponse(dealer_names)
+        else:
+            # Handle the case where the response is not as expected
+            print(f"Unexpected response: {dealerships}")
+            return HttpResponse("Unexpected response from the server", status=500)
+
+
 
 
 # Create a `get_dealer_details` view to render the reviews of a dealer
@@ -114,67 +128,45 @@ def get_dealerships(request):
 # Create a `add_review` view to submit a review
 # def add_review(request, dealer_id):
 # ...
-def car_operations(request):
-    # Retrieve the list of cars from the database
-    cars = CarModel.objects.all()  # Replace YourCarModel with your actual CarModel class
-    return render(request, 'djangoapp/car_operations.html', {'cars': cars})
 
-def add_car(request):
-    # Handle adding a new car (form submission) logic here
-    # For example, create a new car instance and save it to the database
-    return redirect('djangoapp:car_operations')  # Redirect back to the car operations page
 
-@user_passes_test(lambda user: user.is_staff, login_url='djangoapp:login')
-def car_design(request):
-    # Your view logic for the car design page goes here
-    return render(request, 'djangoapp/car_design.html')
+
 
 # Define the get_dealers_from_cf function
 # Define the get_dealers_from_cf function
-def get_dealers_from_cf(request, url):
-    # Replace 'YOUR_DEALER_GET_SERVICE_URL' with the actual URL of your dealer-get service
-    dealer_get_url = 'https://sedadak06-3000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/dealerships/get'
-
-    # Make the REST call to the dealer-get service
-    response = requests.get(dealer_get_url)
-
-    # Check if the request was successful (HTTP status code 200)
-    if response.status_code == 200:
-        # Parse the JSON response into a list of dictionaries
-        dealers_data = response.json()
-
-        # Process the data as needed
-        dealers = []
-
-        for dealer_info in dealers_data:
-            # Assuming 'full_name' is one of the keys in the dealer_info dictionary
-            full_name = dealer_info.get('full_name', '')
-
-            # Assuming other relevant keys are present in the dealer_info dictionary
-            # Modify the following lines based on the actual keys in your data
-            address = dealer_info.get('address', '')
-            city = dealer_info.get('city', '')
-            dealer_id = dealer_info.get('id', '')
-            lat = dealer_info.get('lat', '')
-
-            # Create a CarDealer object
-            dealer = CarDealer(
-                address=address,
-                city=city,
-                full_name=full_name,
-                id=dealer_id,
-                lat=lat,
+def get_dealers_from_cf(url):
+    results = []
+    # Call get_request with a URL parameter
+    json_result = get_request(url)
+    
+    try:
+        # Parse the JSON response into a dictionary
+        dealers_data = json.loads(json_result)
+        
+        # Get the row list in JSON as dealers
+        dealers = dealers_data.get("rows", [])
+        
+        # For each dealer object
+        for dealer in dealers:
+            # Get its content in `doc` object
+            dealer_doc = dealer.get("doc", {})
+            
+            # Create a CarDealer object with values in `doc` object
+            dealer_obj = CarDealer(
+                address=dealer_doc.get("address", ""),
+                city=dealer_doc.get("city", ""),
+                full_name=dealer_doc.get("full_name", ""),
+                id=dealer_doc.get("id", ""),
+                lat=dealer_doc.get("lat", "")
             )
+            results.append(dealer_obj)
 
-            # Add the dealer object to the list
-            dealers.append(dealer)
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON: {e}")
+        return JsonResponse({'error': 'Error decoding JSON'}, status=500)
 
-        # Return a JsonResponse with the processed data
-        return JsonResponse({'dealers': dealers})
-    else:
-        # Handle the error (e.g., log it or raise an exception)
-        print(f"Error fetching dealers: {response.status_code}")
-        return JsonResponse({'error': 'Error fetching dealers'}, status=500)
+    return results
+
 
 # Create a `get_dealer_details` view to render the reviews of a dealer
 def get_dealer_details(request, dealer_id):
