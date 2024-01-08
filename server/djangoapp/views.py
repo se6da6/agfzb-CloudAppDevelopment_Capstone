@@ -15,7 +15,7 @@ import logging
 import json
 import requests
 from django.http import JsonResponse
-from .restapis import get_dealer_reviews_from_cf, get_request
+from .restapis import get_request, get_dealer_reviews_from_cf, analyze_review_sentiments, post_request
 
 
 
@@ -96,28 +96,16 @@ def signup(request):
 # ...
 
 # Update the `get_dealerships` view to render the index page with a list of dealerships
-# Update the get_dealerships view
-# Update the get_dealerships view for debugging
 def get_dealerships(request):
     if request.method == "GET":
         url = "https://sedadak06-3000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/dealerships/get"
         # Get dealers from the URL
         dealerships = get_dealers_from_cf(url)
-
-        # Debugging: Print the content of the dealerships variable
-        print(f"Dealerships: {dealerships}")
-
-        # Check if dealerships is a list of CarDealer objects
-        if isinstance(dealerships, list) and dealerships and isinstance(dealerships[0], CarDealer):
-            # Concat all dealer's full names
-            dealer_names = ' '.join([dealer.full_name for dealer in dealerships])
-            # Return a list of dealer full names
-            return HttpResponse(dealer_names)
-        else:
-            # Handle the case where the response is not as expected
-            print(f"Unexpected response: {dealerships}")
-            return HttpResponse("Unexpected response from the server", status=500)
-
+        print(dealerships)
+        # Concat all dealer's full names
+        dealer_names = ' '.join([dealer.full_name for dealer in dealerships])
+        # Return a list of dealer full names
+        return HttpResponse(dealer_names)
 
 
 
@@ -177,8 +165,45 @@ def get_dealer_details(request, dealer_id):
         # Get reviews from the URL using the dealer_id
         reviews = get_dealer_reviews_from_cf(url, dealer_id)
 
-        # Concatenate all review details
-        review_details = ' '.join([f"Review by {review.name}: {review.review}" for review in reviews])
+        # Analyze sentiment for each review
+        for review in reviews:
+            review.sentiment = analyze_review_sentiments(review.review)
 
-        # Return a list of review details
-        return HttpResponse(review_details)
+        # Append the list of reviews to context
+        context = {
+            'reviews': reviews,
+        }
+
+        # Render a template or create an appropriate HttpResponse
+        # You may need to replace 'dealer_details_template.html' with the actual template name
+        return render(request, 'djangoapp/dealer_details_template.html', context)
+    
+    def add_review(request, dealer_id):
+        if request.method == "POST" and request.user.is_authenticated:
+            # Create a dictionary object called review
+            review = {}
+            review["time"] = datetime.utcnow().isoformat()
+            review["dealership"] = dealer_id
+            review["review"] = request.POST.get('review', '')
+            review["purchase"] = request.POST.get('purchase', False)
+            review["purchase_date"] = request.POST.get('purchase_date', '')
+            review["car_make"] = request.POST.get('car_make', '')
+            review["car_model"] = request.POST.get('car_model', '')
+            review["car_year"] = request.POST.get('car_year', '')
+            review["name"] = request.user.username
+
+            # Create another dictionary object called json_payload
+            json_payload = {}
+            json_payload["review"] = review
+
+            # Replace 'your-cloud-function-domain/reviews/post' with the actual URL
+            url = 'https://sedadak06-5000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/api/post_review'
+
+            # Call the post_request method with the payload
+            post_response = post_request(url, json_payload, dealerId=dealer_id)
+
+            # Return the result of post_request
+            return JsonResponse(post_response)
+
+        # Return an error response if the request method is not POST or user is not authenticated
+        return JsonResponse({'error': 'Invalid request or user not authenticated'})

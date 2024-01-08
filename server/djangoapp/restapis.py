@@ -1,7 +1,9 @@
 import requests
 import json
+from django.http import HttpResponse
 # import related models here
 from .models import CarDealer, DealerReview
+
 from requests.auth import HTTPBasicAuth
 
 
@@ -14,8 +16,8 @@ def get_request(url, **kwargs):
     print("GET from {} ".format(url))
     try:
         # Call get method of requests library with URL and parameters
-        response = requests.get(url, headers={'Content-Type': 'application/json'},
-                                    params=kwargs)
+        response = requests.get(url, params=params, headers={'Content-Type': 'application/json'},
+                                    auth=HTTPBasicAuth('apikey', api_key))
     except:
         # If any error occurs
         print("Network exception occurred")
@@ -74,8 +76,11 @@ def parse_reviews_results(json_result):
                 car_make=review.get("car_make", ""),
                 car_model=review.get("car_model", ""),
                 car_year=review.get("car_year", 0),
-                sentiment=review.get("sentiment", "")
             )
+            
+            # Assign sentiment using analyze_review_sentiments
+            review_obj.sentiment = analyze_review_sentiments(review_obj.review)
+            
             results.append(review_obj)
     return results
 
@@ -114,4 +119,36 @@ def parse_dealer_results(json_result):
             results.append(dealer_obj)
     return results
 
+def analyze_review_sentiments(dealerreview):
+    # Replace 'your-watson-nlu-url' with the actual Watson NLU URL
+    url = "https://306bcbfb-47e1-44c5-8557-e501ab2f331a-bluemix.cloudantnosqldb.appdomain.cloud",
+    apikey= "fJWhxmGYw3Pmx8iSy7AMIMYodkkE9ZEfKwdLkdfOgD33"
+    # Set up parameters and make the request
+    params = {
+        'text': text,
+        'version': '2021-03-25',
+        'features': 'sentiment',
+        'return_analyzed_text': True,
+    }
+    response = get_request(url, params=params, auth=HTTPBasicAuth('apikey', api_key))
+    
+    # Extract sentiment from Watson NLU result
+    sentiment_label = response.get('sentiment', {}).get('document', {}).get('label', 'unknown')
+    
+    return sentiment_label
 
+def post_request(url, json_payload, **kwargs):
+    print(kwargs)
+    print("POST to {} ".format(url))
+    try:
+        # Call post method of requests library with URL, parameters, and JSON payload
+        response = requests.post(url, params=kwargs, json=json_payload,
+                                 headers={'Content-Type': 'application/json'},
+                                 auth=HTTPBasicAuth('apikey', api_key))
+    except:
+        # If any error occurs
+        print("Network exception occurred")
+    status_code = response.status_code
+    print("With status {} ".format(status_code))
+    json_data = json.loads(response.text)
+    return json_data
