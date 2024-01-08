@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
+
+from server.djangoapp.restapis import get_dealer_reviews_from_cf
 # from .models import related models
 from .models import CarMake, CarModel, CarDealer
 from django.contrib.auth.forms import UserCreationForm
@@ -114,7 +116,7 @@ def get_dealerships(request):
 # ...
 def car_operations(request):
     # Retrieve the list of cars from the database
-    cars = YourCarModel.objects.all()  # Replace YourCarModel with your actual CarModel class
+    cars = CarModel.objects.all()  # Replace YourCarModel with your actual CarModel class
     return render(request, 'djangoapp/car_operations.html', {'cars': cars})
 
 def add_car(request):
