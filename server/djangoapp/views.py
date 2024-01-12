@@ -101,12 +101,14 @@ def get_dealerships(request):
         url = "https://sedadak06-3000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/dealerships/get"
         # Get dealers from the URL
         dealerships = get_dealers_from_cf(url)
-        print(dealerships)
-        # Concat all dealer's full names
-        dealer_names = ' '.join([dealer.full_name for dealer in dealerships])
-        # Return a list of dealer full names
-        return HttpResponse(dealer_names)
+        # Create an empty context dictionary
+        context = {}
 
+        # Add the dealerships list to the context
+        context['dealerships'] = dealerships
+
+        # Render the index.html template with the context
+        return render(request, 'djangoapp/index.html', context)
 
 
 # Create a `get_dealer_details` view to render the reviews of a dealer
@@ -178,32 +180,32 @@ def get_dealer_details(request, dealer_id):
         # You may need to replace 'dealer_details_template.html' with the actual template name
         return render(request, 'djangoapp/dealer_details_template.html', context)
     
-    def add_review(request, dealer_id):
-        if request.method == "POST" and request.user.is_authenticated:
+def add_review(request, dealer_id):
+    if request.method == "POST" and request.user.is_authenticated:
             # Create a dictionary object called review
-            review = {}
-            review["time"] = datetime.utcnow().isoformat()
-            review["dealership"] = dealer_id
-            review["review"] = request.POST.get('review', '')
-            review["purchase"] = request.POST.get('purchase', False)
-            review["purchase_date"] = request.POST.get('purchase_date', '')
-            review["car_make"] = request.POST.get('car_make', '')
-            review["car_model"] = request.POST.get('car_model', '')
-            review["car_year"] = request.POST.get('car_year', '')
-            review["name"] = request.user.username
+        review = {}
+        review["time"] = datetime.utcnow().isoformat()
+        review["dealership"] = dealer_id
+        review["review"] = request.POST.get('review', '')
+        review["purchase"] = request.POST.get('purchase', False)
+        review["purchase_date"] = request.POST.get('purchase_date', '')
+        review["car_make"] = request.POST.get('car_make', '')
+        review["car_model"] = request.POST.get('car_model', '')
+        review["car_year"] = request.POST.get('car_year', '')
+        review["name"] = request.user.username
 
             # Create another dictionary object called json_payload
-            json_payload = {}
-            json_payload["review"] = review
+        json_payload = {}
+        json_payload["review"] = review
 
             # Replace 'your-cloud-function-domain/reviews/post' with the actual URL
-            url = 'https://sedadak06-5000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/api/post_review'
+        url = 'https://sedadak06-5000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/api/post_review'
 
             # Call the post_request method with the payload
-            post_response = post_request(url, json_payload, dealerId=dealer_id)
+        post_response = post_request(url, json_payload, dealerId=dealer_id)
 
             # Return the result of post_request
-            return JsonResponse(post_response)
+        return JsonResponse(post_response)
 
         # Return an error response if the request method is not POST or user is not authenticated
-        return JsonResponse({'error': 'Invalid request or user not authenticated'})
+    return JsonResponse({'error': 'Invalid request or user not authenticated'})
