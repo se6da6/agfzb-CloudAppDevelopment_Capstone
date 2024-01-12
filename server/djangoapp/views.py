@@ -174,6 +174,7 @@ def get_dealer_details(request, dealer_id):
         # Append the list of reviews to context
         context = {
             'reviews': reviews,
+            'dealer': get_object_or_404(CarDealer, id=dealer_id),
         }
 
         # Render a template or create an appropriate HttpResponse
@@ -181,22 +182,39 @@ def get_dealer_details(request, dealer_id):
         return render(request, 'djangoapp/dealer_details_template.html', context)
     
 def add_review(request, dealer_id):
-    if request.method == "POST" and request.user.is_authenticated:
-            # Create a dictionary object called review
-        review = {}
-        review["time"] = datetime.utcnow().isoformat()
-        review["dealership"] = dealer_id
-        review["review"] = request.POST.get('review', '')
-        review["purchase"] = request.POST.get('purchase', False)
-        review["purchase_date"] = request.POST.get('purchase_date', '')
-        review["car_make"] = request.POST.get('car_make', '')
-        review["car_model"] = request.POST.get('car_model', '')
-        review["car_year"] = request.POST.get('car_year', '')
-        review["name"] = request.user.username
+    # Check if the request method is GET
+    if request.method == 'GET':
+        # Query cars with the dealer id to be reviewed
+        cars = CarModel.objects.filter(dealer_id=dealer_id)
+        # Create a context dictionary with the queried cars
+        context = {'cars': cars}
+        # Render the add_review.html template with the context
+        return render(request, 'djangoapp/add_review.html', context)
 
-            # Create another dictionary object called json_payload
-        json_payload = {}
-        json_payload["review"] = review
+    elif request.method == "POST" and request.user.is_authenticated:
+        # Get the form data from the POST request
+        review_content = request.POST.get('review', '')
+        purchase_status = request.POST.get('purchase', False)
+        car_id = request.POST.get('car', '')
+        purchase_date_str = request.POST.get('purchase_date', '')
+
+        # Convert purchase date string to datetime format
+        purchase_date = datetime.strptime(purchase_date_str, '%m/%d/%Y').isoformat()
+            # Create a dictionary object called review
+        review = {
+            "time": datetime.utcnow().isoformat(),
+            "dealership": dealer_id,
+            "review": review_content,
+            "purchase": purchase_status,
+            "purchase_date": purchase_date,
+            "car_make": CarModel.objects.get(id=car_id).make.name,
+            "car_model": CarModel.objects.get(id=car_id).name,
+            "car_year": CarModel.objects.get(id=car_id).year.strftime("%Y"),
+            "name": request.user.username
+        }
+
+        # Create a dictionary object for the JSON payload
+        json_payload = {"review": review}
 
             # Replace 'your-cloud-function-domain/reviews/post' with the actual URL
         url = 'https://sedadak06-5000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/api/post_review'
@@ -205,7 +223,8 @@ def add_review(request, dealer_id):
         post_response = post_request(url, json_payload, dealerId=dealer_id)
 
             # Return the result of post_request
-        return JsonResponse(post_response)
+        return redirect("djangoapp:dealer_details", dealer_id=dealer_id)
+
 
         # Return an error response if the request method is not POST or user is not authenticated
     return JsonResponse({'error': 'Invalid request or user not authenticated'})

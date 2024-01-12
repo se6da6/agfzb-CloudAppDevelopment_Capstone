@@ -11,7 +11,7 @@ from requests.auth import HTTPBasicAuth
 # e.g., response = requests.get(url, params=params, headers={'Content-Type': 'application/json'},
 #                                     auth=HTTPBasicAuth('apikey', api_key))
 
-def get_request(url, **kwargs):
+def get_request(url, params=None, api_key=None, **kwargs):
     print(kwargs)
     print("GET from {} ".format(url))
     try:

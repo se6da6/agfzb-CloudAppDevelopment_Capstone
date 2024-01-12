@@ -23,27 +23,34 @@
         <p><strong>Address:</strong> {{ dealer.address }}, {{ dealer.city }}</p>
         <p><strong>ID:</strong> {{ dealer.id }}</p>
         <p><strong>Latitude:</strong> {{ dealer.lat }}</p>
-        <!-- Add other details as needed -->
+        
 
+        <!-- Add a link to the add_review view for the authenticated user -->
+        {% if user.is_authenticated %}
+             <p><a href="{% url 'djangoapp:add_review' dealer.id %}">Add a Review</a></p>
+        {% endif %}
         <!-- Reviews Section -->
         <h2 class="mt-4">Reviews</h2>
-        {% if reviews %}
-            <div class="card-deck mt-3">
-                {% for review in reviews %}
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ review.name }}</h5>
-                            <p class="card-text"><strong>Purchase:</strong> {{ review.purchase }}</p>
-                            <p class="card-text"><strong>Review:</strong> {{ review.review }}</p>
-                            <p class="card-text"><strong>Purchase Date:</strong> {{ review.purchase_date }}</p>
-                            <p class="card-text"><strong>Car Make:</strong> {{ review.car_make }}</p>
-                            <p class="card-text"><strong>Car Model:</strong> {{ review.car_model }}</p>
-                            <p class="card-text"><strong>Car Year:</strong> {{ review.car_year }}</p>
-                            <p class="card-text"><strong>Sentiment:</strong> {{ review.sentiment }}</p>
-                        </div>
+        <div class="card-columns mt-3">
+            {% for review in reviews %}
+                <div class="card">
+                    {% if review.sentiment == 'positive' %}
+                        <img class="card-img-top" src="{{MEDIA_URL}}/emoji/positive.png" alt="Positive Emoji">
+                    {% elif review.sentiment == 'negative' %}
+                        <img class="card-img-top" src="{{MEDIA_URL}}/emoji/negative.png" alt="Negative Emoji">
+                    {% else %}
+                        <img class="card-img-top" src="{{MEDIA_URL}}/emoji/neutral.png" alt="Neutral Emoji">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ review.car_make }} {{ review.car_model }} ({{ review.car_year }})</h5>
+                        <p class="card-text">{{ review.review }}</p>
+                        <p class="card-text"><strong>Purchase:</strong> {{ review.purchase }}</p>
+                        <p class="card-text"><strong>Purchase Date:</strong> {{ review.purchase_date }}</p>
+                        <p class="card-text"><strong>Sentiment:</strong> {{ review.sentiment }}</p>
                     </div>
-                {% endfor %}
-            </div>
+                </div>
+            {% endfor %}
+        </div>
         {% else %}
             <p>No reviews available.</p>
         {% endif %}
